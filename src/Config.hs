@@ -1,5 +1,6 @@
 module Config where
 
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 
@@ -19,8 +20,14 @@ instance Functor m => Functor (Env m) where
 instance Applicative m => Applicative (Env m) where
     pure = Env . pure
     Env a <*> Env b = Env (a <*> b)
+instance Alternative m => Alternative (Env m) where
+    empty = Env empty
+    Env a <|> Env b = Env (a <|> b)
 instance Monad m => Monad (Env m) where
     Env a >>= f = Env $ (\(Env x) -> x) . f =<< a
+instance MonadPlus m => MonadPlus (Env m) where
+    mzero = Env mzero
+    mplus (Env a) (Env b) = Env (mplus a b)
 
 instance MonadIO m => MonadIO (Env m) where
     liftIO = Env . liftIO
